@@ -1,0 +1,188 @@
+# =========================================================
+# File: 03_business_insights.py
+# Project: Uber Data Analysis
+# Purpose: Business Insights, Conclusions, Recommendations
+# Description:
+# This file translates numbers into real business decisions.
+# =========================================================
+
+
+# ===============================
+# 1. Load Libraries & Data
+# ===============================
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv("clean_uber.csv")
+
+
+# ===============================
+# 2. Business Question 1:
+# When is demand highest?
+# ===============================
+
+rides_by_hour = df.groupby('hour').size().sort_values(ascending=False)
+rides_by_hour.head(5)
+
+
+# ===============================
+# INSIGHT:
+# Peak demand happens at specific hours.
+# This suggests where more drivers should be allocated.
+# ===============================
+
+
+# ===============================
+# 3. Business Question 2:
+# Which days generate the most revenue?
+# ===============================
+
+revenue_by_day = df[df['is_completed'] == True].groupby('weekday')['Booking Value'].sum().sort_values(ascending=False)
+revenue_by_day
+
+
+# ===============================
+# INSIGHT:
+# Some weekdays generate significantly more revenue.
+# Promotions should target low-revenue days.
+# ===============================
+
+
+# ===============================
+# 4. Business Question 3:
+# What is the cancellation problem size?
+# ===============================
+
+cancel_rate = df['is_cancelled'].mean() * 100
+cancel_rate
+
+
+# ===============================
+# INSIGHT:
+# A high cancellation rate means lost revenue and bad UX.
+# This should be investigated operationally.
+# ===============================
+
+
+# ===============================
+# 5. Business Question 4:
+# Do long rides always mean more money?
+# ===============================
+
+df[['Ride Distance', 'Booking Value']].corr()
+
+
+# ===============================
+# INSIGHT:
+# If correlation is weak, pricing might be inconsistent.
+# ===============================
+
+
+# ===============================
+# 6. Business Question 5:
+# Who are our best customers?
+# ===============================
+
+revenue_per_customer = df[df['is_completed'] == True].groupby('Customer ID')['Booking Value'].sum()
+top_customers = revenue_per_customer.sort_values(ascending=False).head(10)
+top_customers
+
+
+# ===============================
+# INSIGHT:
+# A small group of customers generates a large portion of revenue.
+# Loyalty programs should target these users.
+# ===============================
+
+
+# ===============================
+# 7. Business Question 6:
+# Which locations are the most valuable?
+# ===============================
+
+revenue_by_location = df[df['is_completed'] == True].groupby('Pickup Location')['Booking Value'].sum().sort_values(ascending=False)
+revenue_by_location.head(10)
+
+
+# ===============================
+# INSIGHT:
+# High revenue locations should get more drivers.
+# ===============================
+
+
+# ===============================
+# 8. Business Question 7:
+# Which vehicle type is the most profitable?
+# ===============================
+
+revenue_by_vehicle = df[df['is_completed'] == True].groupby('Vehicle Type')['Booking Value'].sum().sort_values(ascending=False)
+revenue_by_vehicle
+
+
+# ===============================
+# INSIGHT:
+# Not all vehicle types are equally profitable.
+# Supply should match profitability.
+# ===============================
+
+
+# ===============================
+# 9. Business Question 8:
+# Does rating affect revenue?
+# ===============================
+
+df[['Customer Rating', 'Booking Value']].corr()
+
+
+# ===============================
+# INSIGHT:
+# Low ratings may indicate service issues that hurt revenue.
+# ===============================
+
+
+# ===============================
+# 10. Customer Segmentation
+# ===============================
+
+rides_per_customer = df.groupby('Customer ID').size()
+
+segments = pd.cut(
+    rides_per_customer,
+    bins=[0,1,5,15,1000],
+    labels=['One-time', 'Occasional', 'Regular', 'Heavy User']
+)
+
+segments.value_counts()
+
+
+# ===============================
+# INSIGHT:
+# Most users are one-time or occasional.
+# Retention is a big opportunity.
+# ===============================
+
+
+# ===============================
+# 11. Executive Summary (Text)
+# ===============================
+
+summary = """
+EXECUTIVE SUMMARY:
+
+1. Demand is highly concentrated in specific hours.
+2. Some weekdays outperform others in revenue.
+3. Cancellations represent a significant revenue loss.
+4. A small number of users generate a large share of revenue.
+5. Some locations and vehicle types outperform others.
+6. Retention is a major growth opportunity.
+
+RECOMMENDATIONS:
+
+- Increase driver supply during peak hours.
+- Launch promotions on low-demand days.
+- Investigate main causes of cancellations.
+- Create loyalty programs for high-value users.
+- Reallocate drivers to high-revenue areas.
+"""
+
+print(summary)
