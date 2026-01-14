@@ -1,0 +1,149 @@
+# =========================================================
+# File: 01_data_cleaning.py
+# Project: Uber Data Analysis
+# Purpose: Data Cleaning & Feature Engineering
+# Description:
+# This file is responsible for:
+# - Loading the dataset
+# - Checking data types
+# - Handling missing values
+# - Creating new useful columns
+# - Preparing the dataset for analysis
+# - Saving a clean version of the data
+# =========================================================
+
+
+# ===============================
+# 1. Import Required Libraries
+# ===============================
+# pandas: for data manipulation
+# numpy: for numerical operations
+
+import pandas as pd
+import numpy as np
+
+
+# ===============================
+# 2. Load the Dataset
+# ===============================
+# We load the Excel file into a pandas DataFrame
+
+df = pd.read_excel("uber.xlsx")
+
+# Display the first 5 rows to understand the structure
+df.head()
+
+
+# ===============================
+# 3. Basic Dataset Inspection
+# ===============================
+# Shows:
+# - Column names
+# - Data types
+# - Non-null counts
+# - Memory usage
+
+df.info()
+
+# Summary statistics for numerical columns
+df.describe()
+
+
+# ===============================
+# 4. Check Missing Values
+# ===============================
+# This helps us understand which columns need cleaning
+
+df.isnull().sum()
+
+
+# ===============================
+# 5. Convert Date Column to Datetime
+# ===============================
+# Converting the Date column to proper datetime format
+# This allows us to extract year, month, day, etc.
+
+df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+
+
+# ===============================
+# 6. Convert Time Column to Proper Format
+# ===============================
+# Convert Time column to time format
+# Errors are coerced to NaT
+
+df['Time'] = pd.to_datetime(df['Time'], format='%H:%M:%S', errors='coerce').dt.time
+
+
+# ===============================
+# 7. Create Time-Based Features
+# ===============================
+# These columns are important for time-based analysis
+
+df['hour'] = pd.to_datetime(df['Time'], format='%H:%M:%S', errors='coerce').dt.hour
+df['day'] = df['Date'].dt.day
+df['month'] = df['Date'].dt.month
+df['year'] = df['Date'].dt.year
+df['weekday'] = df['Date'].dt.day_name()
+
+# Flag for weekend
+df['is_weekend'] = df['weekday'].isin(['Saturday', 'Sunday'])
+
+
+# ===============================
+# 8. Create Business Logic Columns
+# ===============================
+# These columns help in analysis later
+
+# Indicates whether the ride was completed
+df['is_completed'] = df['Booking Status'] == 'Completed'
+
+# Indicates whether the ride was cancelled
+df['is_cancelled'] = (
+    (df['Cancelled Rides by Customer'] == 'Yes') |
+    (df['Cancelled Rides by Driver'] == 'Yes')
+)
+
+
+# ===============================
+# 9. Handle Missing Values (Optional)
+# ===============================
+# Example strategies (you can customize later):
+
+# Fill missing ratings with the average
+if 'Customer Rating' in df.columns:
+    df['Customer Rating'] = df['Customer Rating'].fillna(df['Customer Rating'].mean())
+
+if 'Driver Rating' in df.columns:
+    df['Driver Rating'] = df['Driver Rating'].fillna(df['Driver Rating'].mean())
+
+
+# ===============================
+# 10. Remove Duplicate Rows (if any)
+# ===============================
+# This ensures data quality
+
+df = df.drop_duplicates()
+
+
+# ===============================
+# 11. Final Data Check
+# ===============================
+df.info()
+df.head()
+
+
+# ===============================
+# 12. Save Clean Dataset
+# ===============================
+# We save the cleaned data to a CSV file
+# This file will be used for all future analysis
+
+df.to_csv("clean_uber.csv", index=False)
+
+
+# ===============================
+# 13. Confirmation Message
+# ===============================
+print("Data cleaning completed successfully!")
+print("Clean dataset saved as: clean_uber.csv")
