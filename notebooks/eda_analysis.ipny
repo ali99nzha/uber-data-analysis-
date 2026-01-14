@@ -1,0 +1,278 @@
+# =========================================================
+# File: 02_eda_analysis.py
+# Project: Uber Data Analysis
+# Purpose: Exploratory Data Analysis (EDA)
+# Description:
+# This file focuses on understanding patterns, trends,
+# and business insights from the cleaned dataset.
+# =========================================================
+
+
+# ===============================
+# 1. Import Libraries
+# ===============================
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+# ===============================
+# 2. Load Clean Dataset
+# ===============================
+df = pd.read_csv("clean_uber.csv")
+
+df.head()
+
+
+# ===============================
+# 3. General Overview
+# ===============================
+# Shape of the dataset
+df.shape
+
+# Column names
+df.columns
+
+# Basic statistics
+df.describe()
+
+
+# ===============================
+# 4. KPI Overview
+# ===============================
+
+# Total rides
+total_rides = len(df)
+
+# Completed rides
+completed_rides = df['is_completed'].sum()
+
+# Cancelled rides
+cancelled_rides = df['is_cancelled'].sum()
+
+# Total revenue
+total_revenue = df[df['is_completed'] == True]['Booking Value'].sum()
+
+# Average revenue per ride
+avg_revenue = df[df['is_completed'] == True]['Booking Value'].mean()
+
+total_rides, completed_rides, cancelled_rides, total_revenue, avg_revenue
+
+
+# ===============================
+# 5. Time Analysis
+# ===============================
+# Business Question:
+# When do users use Uber the most?
+
+rides_by_hour = df.groupby('hour').size()
+
+plt.figure()
+rides_by_hour.plot(kind='bar')
+plt.title("Number of Rides by Hour")
+plt.xlabel("Hour")
+plt.ylabel("Number of Rides")
+plt.show()
+
+
+# ===============================
+# 6. Daily Trend
+# ===============================
+# Business Question:
+# Is usage increasing or decreasing over time?
+
+daily_trips = df.groupby('Date').size()
+
+plt.figure()
+daily_trips.plot()
+plt.title("Daily Trips Trend")
+plt.xlabel("Date")
+plt.ylabel("Number of Trips")
+plt.show()
+
+
+# ===============================
+# 7. Weekday vs Weekend
+# ===============================
+# Business Question:
+# Do people use Uber more on weekdays or weekends?
+
+weekday_usage = df['is_weekend'].value_counts()
+
+plt.figure()
+weekday_usage.plot(kind='bar')
+plt.title("Weekday vs Weekend Usage")
+plt.xlabel("Is Weekend")
+plt.ylabel("Number of Trips")
+plt.show()
+
+
+# ===============================
+# 8. Revenue Analysis
+# ===============================
+# Business Question:
+# Which days generate the most revenue?
+
+revenue_by_day = df[df['is_completed'] == True].groupby('weekday')['Booking Value'].sum()
+
+plt.figure()
+revenue_by_day.plot(kind='bar')
+plt.title("Revenue by Weekday")
+plt.xlabel("Day")
+plt.ylabel("Revenue")
+plt.show()
+
+
+# ===============================
+# 9. Ride Distance Analysis
+# ===============================
+# Business Question:
+# What is the distribution of ride distances?
+
+plt.figure()
+sns.histplot(df['Ride Distance'], bins=30)
+plt.title("Distribution of Ride Distances")
+plt.xlabel("Distance")
+plt.ylabel("Frequency")
+plt.show()
+
+
+# ===============================
+# 10. Distance vs Revenue
+# ===============================
+# Business Question:
+# Is longer distance always more revenue?
+
+plt.figure()
+sns.scatterplot(x=df['Ride Distance'], y=df['Booking Value'])
+plt.title("Distance vs Revenue")
+plt.xlabel("Distance")
+plt.ylabel("Revenue")
+plt.show()
+
+
+# ===============================
+# 11. Cancellation Analysis
+# ===============================
+# Business Question:
+# How big is the cancellation problem?
+
+cancel_rate = df['is_cancelled'].mean() * 100
+cancel_rate
+
+
+# ===============================
+# 12. Cancellation by Hour
+# ===============================
+cancel_by_hour = df.groupby('hour')['is_cancelled'].mean() * 100
+
+plt.figure()
+cancel_by_hour.plot(kind='bar')
+plt.title("Cancellation Rate by Hour")
+plt.xlabel("Hour")
+plt.ylabel("Cancellation Rate (%)")
+plt.show()
+
+
+# ===============================
+# 13. Customer Behavior
+# ===============================
+# Business Question:
+# Do most customers use Uber once or multiple times?
+
+rides_per_customer = df.groupby('Customer ID').size()
+
+plt.figure()
+sns.histplot(rides_per_customer, bins=30)
+plt.title("Rides per Customer Distribution")
+plt.xlabel("Number of Rides")
+plt.ylabel("Number of Customers")
+plt.show()
+
+
+# ===============================
+# 14. Top Customers
+# ===============================
+top_customers = rides_per_customer.sort_values(ascending=False).head(10)
+top_customers
+
+
+# ===============================
+# 15. Location Analysis
+# ===============================
+# Business Question:
+# Which pickup locations are the busiest?
+
+top_pickups = df['Pickup Location'].value_counts().head(10)
+
+plt.figure()
+top_pickups.plot(kind='bar')
+plt.title("Top 10 Pickup Locations")
+plt.xlabel("Location")
+plt.ylabel("Trips")
+plt.show()
+
+
+# ===============================
+# 16. Vehicle Type Analysis
+# ===============================
+# Business Question:
+# Which vehicle types are most used?
+
+vehicle_usage = df['Vehicle Type'].value_counts()
+
+plt.figure()
+vehicle_usage.plot(kind='bar')
+plt.title("Vehicle Type Usage")
+plt.xlabel("Vehicle Type")
+plt.ylabel("Trips")
+plt.show()
+
+
+# ===============================
+# 17. Ratings Analysis
+# ===============================
+# Business Question:
+# How do customers rate the service?
+
+plt.figure()
+sns.histplot(df['Customer Rating'], bins=20)
+plt.title("Customer Ratings Distribution")
+plt.xlabel("Rating")
+plt.ylabel("Frequency")
+plt.show()
+
+
+# ===============================
+# 18. Revenue by Vehicle Type
+# ===============================
+revenue_by_vehicle = df[df['is_completed'] == True].groupby('Vehicle Type')['Booking Value'].sum()
+
+plt.figure()
+revenue_by_vehicle.plot(kind='bar')
+plt.title("Revenue by Vehicle Type")
+plt.xlabel("Vehicle Type")
+plt.ylabel("Revenue")
+plt.show()
+
+
+# ===============================
+# 19. Correlation Analysis
+# ===============================
+# Business Question:
+# What variables are strongly related?
+
+numeric_cols = df.select_dtypes(include=np.number)
+correlation_matrix = numeric_cols.corr()
+
+plt.figure(figsize=(10, 6))
+sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm")
+plt.title("Correlation Matrix")
+plt.show()
+
+
+# ===============================
+# 20. Final Notes
+# ===============================
+print("EDA Completed Successfully!")
